@@ -1,12 +1,15 @@
+import AddStudentForm from "@/components/add-student-form";
 import SearchBar from "@/components/search-bar";
 import StudentDetail from "@/components/student-detail";
 import StudentItem from "@/components/student-item";
 import { Student, STUDENTS } from "@/data/students";
 import React, { useState } from "react";
-import { Text, StyleSheet, View, FlatList } from "react-native";
+import { Text, StyleSheet, View, FlatList, Pressable } from "react-native";
 
 export default function HomePage() {
     const [query, setQuery] = useState<string>("");
+
+    const [showForm, setShowForm] = useState(false);
 
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
@@ -18,11 +21,19 @@ export default function HomePage() {
         setSelectedStudent((prev) => (prev?.id === student.id ? null : student));
     };
 
+    if (showForm) {
+        return <AddStudentForm onSubmitSuccess={() => {}} />;
+    }
+
     return (
         <View style={styles.container}>
             {/* NEW: Add a page title for the student list */}
             <View style={styles.titleBar}>
                 <Text style={styles.title}>Student Directory</Text>
+                {/* // Add a button somewhere in the title bar: */}
+                <Pressable onPress={() => setShowForm(true)}>
+                    <Text style={{ color: "#FFFFFF", fontWeight: "700" }}>+ Add</Text>
+                </Pressable>
             </View>
 
             <SearchBar value={query} onChangeText={setQuery}></SearchBar>
