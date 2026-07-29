@@ -7,6 +7,7 @@ import { Student } from "../data/students";
 
 interface AddStudentFormProps {
     onSubmitSuccess: (student: Student) => void;
+    onClose?: () => void;
 }
 
 // Shape of the form's own state — note skillsText is a single
@@ -60,7 +61,7 @@ function validateForm(data: FormData): FormErrors {
     return newErrors;
 }
 
-export default function AddStudentForm({ onSubmitSuccess }: AddStudentFormProps) {
+export default function AddStudentForm({ onSubmitSuccess, onClose }: AddStudentFormProps) {
     // Combined state — all 5 text fields live together
     const [formData, setFormData] = useState<FormData>({
         name: "",
@@ -166,7 +167,12 @@ export default function AddStudentForm({ onSubmitSuccess }: AddStudentFormProps)
 
     return (
         <ScrollView style={styles.container}>
-            <Text style={styles.heading}>Join the Directory</Text>
+            <View style={styles.headerRow}>
+                <Text style={styles.heading}>Join the Directory</Text>
+                <Pressable onPress={onClose} style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}>
+                    <Text style={styles.closeText}>Close</Text>
+                </Pressable>
+            </View>
             <Text style={styles.subheading}>Fill in your details below to add yourself to StudentDirectory.</Text>
 
             <FormField label="Full Name" value={formData.name} onChangeText={(text) => updateField("name", text)} onBlur={() => markTouched("name")} placeholder="e.g. Ashraful Haque" error={getFieldError("name")} />
@@ -188,7 +194,7 @@ export default function AddStudentForm({ onSubmitSuccess }: AddStudentFormProps)
 
             <FormField label="Skills (comma-separated)" value={formData.skillsText} onChangeText={(text) => updateField("skillsText", text)} placeholder="e.g. React Native, TypeScript, Figma" autoCapitalize="none" />
 
-            <Pressable style={[styles.button, !isFormValid && styles.buttonDisabled]} onPress={() => handleSubmitPress} disabled={!isFormValid || isSubmitting}>
+            <Pressable style={[styles.button, !isFormValid && styles.buttonDisabled]} onPress={handleSubmitPress} disabled={!isFormValid || isSubmitting}>
                 {isSubmitting ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.buttonText}>Join Directory</Text>}
             </Pressable>
         </ScrollView>
@@ -213,6 +219,15 @@ const styles = StyleSheet.create({
     buttonText: {
         color: "#FFFFFF",
         fontSize: 15,
+        fontWeight: "700",
+    },
+    headerRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+    },
+    closeText: {
+        color: "#0D1F4E",
         fontWeight: "700",
     },
 });

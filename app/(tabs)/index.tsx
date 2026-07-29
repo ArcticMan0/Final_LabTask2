@@ -20,7 +20,7 @@ export default function HomePage() {
         setShowForm(false);
     };
 
-    const filtered = STUDENTS.filter((s) => {
+    const filtered = students.filter((s) => {
         return s.name.toLowerCase().includes(query.toLowerCase()) || s.department.toLowerCase().includes(query.toLowerCase());
     });
 
@@ -29,7 +29,7 @@ export default function HomePage() {
     };
 
     if (showForm) {
-        return <AddStudentForm onSubmitSuccess={() => handleNewStudent} />;
+        return <AddStudentForm onSubmitSuccess={handleNewStudent} onClose={() => setShowForm(false)} />;
     }
 
     return (
