@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import FormField from "./form-field";
 import { Student } from "../data/students";
+import { router } from "expo-router";
+import { useStudents } from "../context/students-context";
 
-interface AddStudentFormProps {
-    onSubmitSuccess: (student: Student) => void;
-    onClose?: () => void;
-}
+// interface AddStudentFormProps {
+//     onSubmitSuccess: (student: Student) => void;
+//     onClose?: () => void;
+// }
 
 // Shape of the form's own state — note skillsText is a single
 // string here; it gets split into an array only on submit.
@@ -61,7 +63,10 @@ function validateForm(data: FormData): FormErrors {
     return newErrors;
 }
 
-export default function AddStudentForm({ onSubmitSuccess, onClose }: AddStudentFormProps) {
+export default function AddStudentForm() {
+	// Consume the context inside the component
+	const { dispatch } = useStudents();
+
     // Combined state — all 5 text fields live together
     const [formData, setFormData] = useState<FormData>({
         name: "",
@@ -130,7 +135,9 @@ export default function AddStudentForm({ onSubmitSuccess, onClose }: AddStudentF
 
             setIsSubmitting(false);
             setSubmitTrigger(false);
-            onSubmitSuccess(newStudent);
+            // onSubmitSuccess(newStudent);
+            dispatch({ type: "ADD_STUDENT", payload: newStudent });
+			router.back();
         }, 1500);
 
         // Cleanup: if the component unmounts (user navigates away)
@@ -169,7 +176,7 @@ export default function AddStudentForm({ onSubmitSuccess, onClose }: AddStudentF
         <ScrollView style={styles.container}>
             <View style={styles.headerRow}>
                 <Text style={styles.heading}>Join the Directory</Text>
-                <Pressable onPress={onClose} style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}>
+                <Pressable onPress={() => router.back()} style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}>
                     <Text style={styles.closeText}>Close</Text>
                 </Pressable>
             </View>
