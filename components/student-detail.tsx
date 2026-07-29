@@ -1,14 +1,49 @@
 // components/student-detail.tsx
 
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Student } from "../data/students";
 import React from "react";
+import { useStudents } from "@/context/students-context";
 
 interface StudentDetailProps {
     student: Student;
+    // NEW: Callback function to be called when the student is removed
+    onRemoved: () => void;
 }
 
-export default function StudentDetail({ student }: StudentDetailProps) {
+// Add the onRemoved prop
+export default function StudentDetail({ student, onRemoved }: StudentDetailProps) {
+    const { dispatch } = useStudents();
+
+    const handleRemove = () => {
+        console.log("Remove button pressed for student:", student.name);
+
+        const message = `Remove ${student.name} from the directory?`;
+
+		// Alert is different on web vs Mobile
+		// This is the Web version of the confirmation dialog
+        if (Platform.OS === "web" && typeof window !== "undefined") {
+            const shouldRemove = window.confirm(message);
+            if (shouldRemove) {
+                dispatch({ type: "REMOVE_STUDENT", payload: student.id });
+                onRemoved();
+            }
+            return;
+        }
+
+		// This is the Mobile version of the confirmation dialog
+        Alert.alert("Remove Student", message, [
+            { text: "Cancel", style: "cancel" },
+            {
+                text: "Remove",
+                style: "destructive",
+                onPress: () => {
+                    dispatch({ type: "REMOVE_STUDENT", payload: student.id });
+                    onRemoved();
+                },
+            },
+        ]);
+    };
     return (
         <View style={styles.card}>
             {/* Header row: name + department */}
@@ -31,6 +66,11 @@ export default function StudentDetail({ student }: StudentDetailProps) {
                     </View>
                 ))}
             </View>
+
+            {/* Add this at the bottom of the card */}
+            <Pressable style={styles.removeButton} onPress={handleRemove}>
+                <Text style={styles.removeText}>Remove from Directory</Text>
+            </Pressable>
         </View>
     );
 }
@@ -105,5 +145,19 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: "#1D4ED8",
         fontWeight: "500",
+    },
+    // Add to StyleSheet.create({...}):
+    removeButton: {
+        marginTop: 16,
+        paddingVertical: 10,
+        alignItems: "center",
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: "#EF4444",
+    },
+    removeText: {
+        color: "#EF4444",
+        fontSize: 13,
+        fontWeight: "600",
     },
 });

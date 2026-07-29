@@ -67,7 +67,7 @@ export default function HomePage() {
                 }
             />
 
-            {selectedStudent && <StudentDetail student={selectedStudent} />}
+            {selectedStudent && <StudentDetail student={selectedStudent} onRemoved={() => setSelectedStudent(null)} />}
         </SafeAreaView>
     );
 }
