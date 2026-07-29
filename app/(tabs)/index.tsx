@@ -8,10 +8,17 @@ import { Text, StyleSheet, View, FlatList, Pressable } from "react-native";
 
 export default function HomePage() {
     const [query, setQuery] = useState<string>("");
-
     const [showForm, setShowForm] = useState(false);
-
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+    const [students, setStudents] = useState<Student[]>(STUDENTS);
+
+    const handleNewStudent = (newStudent: Student) => {
+        // Lifting state up in action: the form hands the new
+        // student back to this parent screen, which prepends
+        // it to the list.
+        setStudents((prev) => [newStudent, ...prev]);
+        setShowForm(false);
+    };
 
     const filtered = STUDENTS.filter((s) => {
         return s.name.toLowerCase().includes(query.toLowerCase()) || s.department.toLowerCase().includes(query.toLowerCase());
@@ -22,7 +29,7 @@ export default function HomePage() {
     };
 
     if (showForm) {
-        return <AddStudentForm onSubmitSuccess={() => {}} />;
+        return <AddStudentForm onSubmitSuccess={() => handleNewStudent} />;
     }
 
     return (
