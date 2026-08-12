@@ -1,14 +1,16 @@
 // components/add-student-form.tsx
-
+import React from "react";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import FormField from "./form-field";
 import { Student } from "../data/students";
-import React from "react";
+import { router } from "expo-router";
+import { useStudents } from "../context/students-context";
 
-interface AddStudentFormProps {
-    onSubmitSuccess: (student: Student) => void;
-}
+// interface AddStudentFormProps {
+//     onSubmitSuccess: (student: Student) => void;
+//     onClose?: () => void;
+// }
 
 // Shape of the form's own state — note skillsText is a single
 // string here; it gets split into an array only on submit.
@@ -61,7 +63,10 @@ function validateForm(data: FormData): FormErrors {
     return newErrors;
 }
 
-export default function AddStudentForm({ onSubmitSuccess }: AddStudentFormProps) {
+export default function AddStudentForm() {
+	// Consume the context inside the component
+	const { dispatch } = useStudents();
+
     // Combined state — all 5 text fields live together
     const [formData, setFormData] = useState<FormData>({
         name: "",
@@ -75,37 +80,26 @@ export default function AddStudentForm({ onSubmitSuccess }: AddStudentFormProps)
     const [errors, setErrors] = useState<FormErrors>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // This state tracks which fields have been touched (blurred) by the user.
+    // Tracks which fields have been touched (blurred) by the user
     const [touched, setTouched] = useState<Record<string, boolean>>({});
-    // This state tracks whether the user has attempted to submit the form.
+
+    // Tracks whether the user has attempted to submit the form
     const [submitAttempted, setSubmitAttempted] = useState(false);
+    const [submitTrigger, setSubmitTrigger] = useState(false);
+
     const markTouched = (field: keyof FormData) => {
         setTouched((prev) => ({ ...prev, [field]: true }));
     };
 
-    // Helper function to get the error message for a field, considering touched and submitAttempted states
+    // A field's error should only be visible if the user has
+    // touched that field, OR has attempted to submit the form.
+    // Without submitAttempted, a field the user never interacts
+    // with (e.g. they go straight for Submit) would silently
+    // block the form without ever showing why.
     const getFieldError = (field: keyof FormErrors) => {
         return touched[field] || submitAttempted ? errors[field] : undefined;
     };
 
-    // This state is used to trigger the submit effect when the user presses the submit button.
-    const [submitTrigger, setSubmitTrigger] = useState(false);
-    const handleSubmitPress = () => {
-        // Mark every field touched so any remaining errors show
-        setTouched((prev) => ({ ...prev, name: true, studentId: true, department: true, bio: true }));
-        setSubmitAttempted(true);
-        if (isFormValid) {
-            setIsSubmitting(true);
-            setSubmitTrigger(true);
-        }
-    };
-
-    // Generic field updater — one function handles all 5 fields
-    const updateField = (field: keyof FormData, value: string) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
-    };
-
-    // Validation effect
     // Re-validate automatically whenever any field changes.
     // The dependency array [formData] means: run this effect
     // again whenever formData is a new object (i.e. on every keystroke).
@@ -113,6 +107,9 @@ export default function AddStudentForm({ onSubmitSuccess }: AddStudentFormProps)
         const newErrors = validateForm(formData);
         setErrors(newErrors);
     }, [formData]);
+
+    // Derived value — not state, computed fresh every render
+    const isFormValid = Object.keys(errors).length === 0 && formData.name.length > 0 && formData.studentId.length > 0;
 
     // Submit effect
     // This effect runs when the user presses the submit button.
@@ -138,7 +135,9 @@ export default function AddStudentForm({ onSubmitSuccess }: AddStudentFormProps)
 
             setIsSubmitting(false);
             setSubmitTrigger(false);
-            onSubmitSuccess(newStudent);
+            // onSubmitSuccess(newStudent);
+            dispatch({ type: "ADD_STUDENT", payload: newStudent });
+			router.back();
         }, 1500);
 
         // Cleanup: if the component unmounts (user navigates away)
@@ -150,27 +149,58 @@ export default function AddStudentForm({ onSubmitSuccess }: AddStudentFormProps)
         };
     }, [submitTrigger]);
 
-    // Derived value — not state, computed fresh every render
-    const isFormValid = Object.keys(errors).length === 0 && formData.name.length > 0 && formData.studentId.length > 0;
+    // Generic field updater — one function handles all 5 fields
+    const updateField = (field: keyof FormData, value: string) => {
+        setFormData((prev) => ({ ...prev, [field]: value }));
+    };
 
     // ... validation effect and submit handler go here (Section 4 and 5)
+    const handleSubmitPress = () => {
+        // Mark every field touched so any remaining errors show
+        setTouched((prev) => ({
+            ...prev,
+            name: true,
+            studentId: true,
+            department: true,
+            bio: true,
+        }));
+        setSubmitAttempted(true);
+
+        if (isFormValid) {
+            setIsSubmitting(true);
+            setSubmitTrigger(true);
+        }
+    };
 
     return (
         <ScrollView style={styles.container}>
-            <Text style={styles.heading}>Join the Directory</Text>
+            <View style={styles.headerRow}>
+                <Text style={styles.heading}>Join the Directory</Text>
+                <Pressable onPress={() => router.back()} style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}>
+                    <Text style={styles.closeText}>Close</Text>
+                </Pressable>
+            </View>
             <Text style={styles.subheading}>Fill in your details below to add yourself to StudentDirectory.</Text>
 
-            <FormField label="Full Name" value={formData.name} onChangeText={(text) => updateField("name", text)} placeholder="e.g. Ashraful Haque" error={getFieldError("name")} onBlur={() => markTouched("name")} />
+            <FormField label="Full Name" value={formData.name} onChangeText={(text) => updateField("name", text)} onBlur={() => markTouched("name")} placeholder="e.g. Ashraful Haque" error={getFieldError("name")} />
 
-            <FormField label="Student ID" value={formData.studentId} onChangeText={(text) => updateField("studentId", text)} placeholder="e.g. 22-12345-1" autoCapitalize="none" error={getFieldError("studentId")} onBlur={() => markTouched("studentId")} />
+            <FormField label="Student ID" value={formData.studentId} onChangeText={(text) => updateField("studentId", text)} onBlur={() => markTouched("studentId")} placeholder="e.g. 22-12345-1" autoCapitalize="none" error={getFieldError("studentId")} />
 
-            <FormField label="Department" value={formData.department} onChangeText={(text) => updateField("department", text)} placeholder="e.g. Computer Science" error={getFieldError("department")} onBlur={() => markTouched("department")} />
+            <FormField
+                label="Department"
+                value={formData.department}
+                onChangeText={(text) => updateField("department", text)}
+                onBlur={() => {
+                    markTouched("department");
+                }}
+                placeholder="e.g. Computer Science"
+                error={getFieldError("department")}
+            />
 
-            <FormField label="Bio" value={formData.bio} onChangeText={(text) => updateField("bio", text)} placeholder="A short sentence about yourself..." multiline error={getFieldError("bio")} onBlur={() => markTouched("bio")} />
+            <FormField label="Bio" value={formData.bio} onChangeText={(text) => updateField("bio", text)} onBlur={() => markTouched("bio")} placeholder="A short sentence about yourself..." multiline error={getFieldError("bio")} />
 
-            <FormField label="Skills (comma-separated)" value={formData.skillsText} onChangeText={(text) => updateField("skillsText", text)} placeholder="e.g. React Native, TypeScript, Figma" autoCapitalize="none" onBlur={() => markTouched("skillsText")} />
+            <FormField label="Skills (comma-separated)" value={formData.skillsText} onChangeText={(text) => updateField("skillsText", text)} placeholder="e.g. React Native, TypeScript, Figma" autoCapitalize="none" />
 
-            {/* Submit button goes here — Section 6 */}
             <Pressable style={[styles.button, !isFormValid && styles.buttonDisabled]} onPress={handleSubmitPress} disabled={!isFormValid || isSubmitting}>
                 {isSubmitting ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.buttonText}>Join Directory</Text>}
             </Pressable>
@@ -196,6 +226,15 @@ const styles = StyleSheet.create({
     buttonText: {
         color: "#FFFFFF",
         fontSize: 15,
+        fontWeight: "700",
+    },
+    headerRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+    },
+    closeText: {
+        color: "#0D1F4E",
         fontWeight: "700",
     },
 });

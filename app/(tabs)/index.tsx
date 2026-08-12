@@ -1,32 +1,37 @@
-import AddStudentForm from "../../components/add-student-form";
+import AddStudentForm from "@/components/add-student-form";
 import SearchBar from "@/components/search-bar";
 import StudentDetail from "@/components/student-detail";
 import StudentItem from "@/components/student-item";
 import { Student, STUDENTS } from "@/data/students";
 import React, { useState } from "react";
-import { Pressable, Text, StyleSheet, View, FlatList } from "react-native";
+import { Text, StyleSheet, View, FlatList, Pressable } from "react-native";
+
+import { router } from "expo-router";
+import { useStudents } from "../../context/students-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomePage() {
     const [query, setQuery] = useState<string>("");
-
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
-    const [students, setStudents] = useState<Student[]>(STUDENTS);
-    const [showForm, setShowForm] = useState(false);
+    // Replaced by router navigation
+    // const [showForm, setShowForm] = useState(false);
 
-    const handleNewStudent = (newStudent: Student) => {
-        // Lifting state up in action: the form hands the new
-        // student back to this parent screen, which prepends
-        // it to the list.
-        setStudents((prev) => [newStudent, ...prev]);
-        setShowForm(false);
-    };
+    // Replaced by context
+    // const [students, setStudents] = useState<Student[]>(STUDENTS);
+    // Read students directly from the global context
+    const { students } = useStudents();
 
-    if (showForm) {
-        return <AddStudentForm onSubmitSuccess={handleNewStudent} />;
-    }
+    // No longer needed
+    // const handleNewStudent = (newStudent: Student) => {
+    //     // Lifting state up in action: the form hands the new
+    //     // student back to this parent screen, which prepends
+    //     // it to the list.
+    //     setStudents((prev) => [newStudent, ...prev]);
+    //     setShowForm(false);
+    // };
 
-    const filtered = STUDENTS.filter((s) => {
+    const filtered = students.filter((s) => {
         return s.name.toLowerCase().includes(query.toLowerCase()) || s.department.toLowerCase().includes(query.toLowerCase());
     });
 
@@ -34,17 +39,23 @@ export default function HomePage() {
         setSelectedStudent((prev) => (prev?.id === student.id ? null : student));
     };
 
+    // Replaced by new route
+    // if (showForm) {
+    //     return <AddStudentForm onSubmitSuccess={handleNewStudent} onClose={() => setShowForm(false)} />;
+    // }
+
     return (
-        <View style={styles.container}>
-            {/* NEW: Add a page title for the student list */}
+        <SafeAreaView style={styles.screen}>
             <View style={styles.titleBar}>
                 <Text style={styles.title}>Student Directory</Text>
-                <Pressable onPress={() => setShowForm(true)}>
-                    <Text style={{ color: "#FFFFFF", fontWeight: "700" }}>+ Add</Text>
+                {/* Navigate to the AddStudent screen — no prop passing needed */}
+                <Pressable style={styles.addButton} onPress={() => router.push("/(tabs)/add-student")}>
+                    <Text style={styles.addButtonText}>+ Add</Text>
                 </Pressable>
             </View>
 
-            <SearchBar value={query} onChangeText={setQuery}></SearchBar>
+            <SearchBar value={query} onChangeText={setQuery} />
+
             <FlatList
                 data={filtered}
                 keyExtractor={(item) => item.id}
@@ -54,35 +65,15 @@ export default function HomePage() {
                         <Text style={styles.emptyText}>No students match "{query}"</Text>
                     </View>
                 }
-            ></FlatList>
+            />
 
-            {selectedStudent && <StudentDetail student={selectedStudent}></StudentDetail>}
-        </View>
+            {selectedStudent && <StudentDetail student={selectedStudent} onRemoved={() => setSelectedStudent(null)} />}
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#F0F4F8",
-    },
-    titleContainer: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-    },
-    stepContainer: {
-        gap: 8,
-        marginBottom: 8,
-    },
-    reactLogo: {
-        height: 178,
-        width: 290,
-        bottom: 0,
-        left: 0,
-        position: "absolute",
-    },
-    // NEW: styles for the title bar
+    screen: { flex: 1, backgroundColor: "#F0F4F8" },
     titleBar: {
         flexDirection: "row",
         justifyContent: "space-between",
@@ -91,21 +82,14 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         backgroundColor: "#0D1F4E",
     },
-    title: {
-        fontSize: 20,
-        fontWeight: "bold",
-        color: "#FFFFFF",
+    title: { fontSize: 20, fontWeight: "bold", color: "#FFFFFF" },
+    addButton: {
+        backgroundColor: "#0D9488",
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+        borderRadius: 8,
     },
-    count: {
-        fontSize: 12,
-        color: "#CCFBF1",
-    },
-    empty: {
-        padding: 40,
-        alignItems: "center",
-    },
-    emptyText: {
-        fontSize: 14,
-        color: "#94A3B8",
-    },
+    addButtonText: { color: "#FFFFFF", fontWeight: "700", fontSize: 13 },
+    empty: { padding: 40, alignItems: "center" },
+    emptyText: { fontSize: 14, color: "#94A3B8" },
 });

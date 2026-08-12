@@ -1,5 +1,4 @@
 // components/form-field.tsx
-
 import React from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
 
@@ -7,18 +6,18 @@ interface FormFieldProps {
     label: string;
     value: string;
     onChangeText: (text: string) => void;
+	onBlur?: () => void;
     error?: string;
     placeholder?: string;
     multiline?: boolean;
     autoCapitalize?: "none" | "sentences" | "words" | "characters";
-    onBlur?: () => void;
 }
 
-export default function FormField({ label, value, onChangeText, error, placeholder, multiline = false, autoCapitalize = "sentences", onBlur }: FormFieldProps) {
+export default function FormField({ label, value, onChangeText, onBlur, error, placeholder, multiline = false, autoCapitalize = "sentences" }: FormFieldProps) {
     return (
         <View style={styles.container}>
             <Text style={styles.label}>{label}</Text>
-            <TextInput style={[styles.input, multiline && styles.multiline, error && styles.inputError]} value={value} onChangeText={onChangeText} placeholder={placeholder} placeholderTextColor="#94A3B8" multiline={multiline} autoCapitalize={autoCapitalize} onBlur={onBlur} />
+            <TextInput style={[styles.input, multiline && styles.multiline, error && styles.inputError]} value={value} onChangeText={onChangeText} onBlur={onBlur} placeholder={placeholder} placeholderTextColor="#94A3B8" multiline={multiline} autoCapitalize={autoCapitalize} />
             {/* Only render the error line when there is an error */}
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
         </View>
