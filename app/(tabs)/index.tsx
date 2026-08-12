@@ -2,6 +2,7 @@ import AddStudentForm from "@/components/add-student-form";
 import SearchBar from "@/components/search-bar";
 import StudentDetail from "@/components/student-detail";
 import StudentItem from "@/components/student-item";
+import { useDebounce } from "@/hooks/use-debounce";
 import { Student, STUDENTS } from "@/data/students";
 import React, { useState } from "react";
 import { Text, StyleSheet, View, FlatList, Pressable } from "react-native";
@@ -12,6 +13,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomePage() {
     const [query, setQuery] = useState<string>("");
+    // Debounce the query — filter only runs 300ms after typing stops
+    const debouncedQuery = useDebounce(query, 300);
+
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
     // Replaced by router navigation
@@ -32,7 +36,9 @@ export default function HomePage() {
     // };
 
     const filtered = students.filter((s) => {
-        return s.name.toLowerCase().includes(query.toLowerCase()) || s.department.toLowerCase().includes(query.toLowerCase());
+        // CHANGE: update 'query' to use 'debounedQuery'
+        // return s.name.toLowerCase().includes(query.toLowerCase()) || s.department.toLowerCase().includes(query.toLowerCase());
+        return s.name.toLowerCase().includes(debouncedQuery.toLowerCase()) || s.department.toLowerCase().includes(debouncedQuery.toLowerCase());
     });
 
     const handleSelect = (student: Student) => {
