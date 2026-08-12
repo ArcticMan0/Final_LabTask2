@@ -4,7 +4,8 @@ import StudentDetail from "@/components/student-detail";
 import StudentItem from "@/components/student-item";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Student, STUDENTS } from "@/data/students";
-import React, { useState } from "react";
+// Add useMemo to the import
+import React, { useMemo, useState } from "react";
 import { Text, StyleSheet, View, FlatList, Pressable } from "react-native";
 
 import { router } from "expo-router";
@@ -35,11 +36,12 @@ export default function HomePage() {
     //     setShowForm(false);
     // };
 
-    const filtered = students.filter((s) => {
-        // CHANGE: update 'query' to use 'debounedQuery'
-        // return s.name.toLowerCase().includes(query.toLowerCase()) || s.department.toLowerCase().includes(query.toLowerCase());
-        return s.name.toLowerCase().includes(debouncedQuery.toLowerCase()) || s.department.toLowerCase().includes(debouncedQuery.toLowerCase());
-    });
+    // Only recomputes when students or debouncedQuery changes.
+    // Tapping a student (setSelectedStudent) does NOT re-run this.
+    const filtered = useMemo(() => {
+        return students.filter((s) => s.name.toLowerCase().includes(debouncedQuery.toLowerCase()) 
+		|| s.department.toLowerCase().includes(debouncedQuery.toLowerCase()));
+    }, [students, debouncedQuery]);
 
     const handleSelect = (student: Student) => {
         setSelectedStudent((prev) => (prev?.id === student.id ? null : student));
