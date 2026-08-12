@@ -1,6 +1,7 @@
 // components/search-bar.tsx
 
 import React from "react";
+import { forwardRef } from "react";
 import { StyleSheet, TextInput, View } from "react-native";
 
 interface SearchBarProps {
@@ -9,23 +10,24 @@ interface SearchBarProps {
     placeholder?: string; // the ? means this prop is optional
 }
 
-export default function SearchBar({ value, onChangeText, placeholder }: SearchBarProps) {
-    return (
-        <View style={styles.container}>
-            <TextInput
-                style={styles.input}
-                value={value}
-                onChangeText={onChangeText}
-                placeholder={placeholder ?? "Search students..."}
-                placeholderTextColor="#94A3B8"
-                autoCapitalize="none"
-                autoCorrect={false}
-                clearButtonMode="while-editing" // iOS only: shows × button
-                returnKeyType="search"
-            />
-        </View>
-    );
-}
+// forwardRef lets a parent pass a ref down into this component
+const SearchBar = forwardRef<TextInput, SearchBarProps>(({ value, onChangeText, placeholder }, ref) => (
+    <View style={styles.container}>
+        <TextInput 
+			ref={ref} 
+			style={styles.input} 
+			value={value} 
+			onChangeText={onChangeText} 
+			placeholder={placeholder ?? "Search students..."} 
+			placeholderTextColor="#94A3B8" 
+			autoCapitalize="none" 
+			autoCorrect={false} 
+			returnKeyType="search" 
+		/>
+    </View>
+));
+
+export default SearchBar;
 
 const styles = StyleSheet.create({
     container: {

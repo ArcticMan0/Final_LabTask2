@@ -4,18 +4,30 @@ import StudentDetail from "@/components/student-detail";
 import StudentItem from "@/components/student-item";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Student, STUDENTS } from "@/data/students";
-// Add useMemo to the import
-import React, { useMemo, useState } from "react";
+// Add useRef and useEffect to the import
+import React, { useRef, useEffect, useMemo, useState } from "react";
 import { Text, StyleSheet, View, FlatList, Pressable } from "react-native";
 
 import { router } from "expo-router";
 import { useStudents } from "../../context/students-context";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+// app/(tabs)/index.tsx — import TextInput (not to be used as part of UI, but the type is needed for useRef)
+import { TextInput } from "react-native";
+
 export default function HomePage() {
     const [query, setQuery] = useState<string>("");
     // Debounce the query — filter only runs 300ms after typing stops
     const debouncedQuery = useDebounce(query, 300);
+
+    const searchRef = useRef<TextInput>(null);
+    // Focus the search bar 300ms after mount (lets animation finish)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            searchRef.current?.focus();
+        }, 300);
+        return () => clearTimeout(timer);
+    }, []); // [] — run once on mount only
 
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
@@ -39,8 +51,7 @@ export default function HomePage() {
     // Only recomputes when students or debouncedQuery changes.
     // Tapping a student (setSelectedStudent) does NOT re-run this.
     const filtered = useMemo(() => {
-        return students.filter((s) => s.name.toLowerCase().includes(debouncedQuery.toLowerCase()) 
-		|| s.department.toLowerCase().includes(debouncedQuery.toLowerCase()));
+        return students.filter((s) => s.name.toLowerCase().includes(debouncedQuery.toLowerCase()) || s.department.toLowerCase().includes(debouncedQuery.toLowerCase()));
     }, [students, debouncedQuery]);
 
     const handleSelect = (student: Student) => {
@@ -62,7 +73,12 @@ export default function HomePage() {
                 </Pressable>
             </View>
 
-            <SearchBar value={query} onChangeText={setQuery} />
+            <SearchBar 
+				// NEW: apply the useRef here:
+				ref={searchRef}
+				value={query} 
+				onChangeText={setQuery} 
+			/>
 
             <FlatList
                 data={filtered}
