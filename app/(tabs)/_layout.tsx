@@ -1,5 +1,6 @@
-import { Tabs } from "expo-router";
 import React from "react";
+import { Tabs } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -34,6 +35,14 @@ export default function TabLayout() {
                     headerTitle: "Join the Directory",
                     headerStyle: { backgroundColor: "#0D1F4E" },
                     headerTintColor: "#FFFFFF",
+                }}
+            />
+
+            <Tabs.Screen
+                name="statistics"
+                options={{
+                    title: "Stats",
+                    tabBarIcon: ({ color, size }) => <Ionicons name="bar-chart-outline" size={size} color={color} />,
                 }}
             />
 
