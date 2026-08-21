@@ -37,12 +37,22 @@ export default function HomePage() {
     // Replaced by context
     // const [students, setStudents] = useState<Student[]>(STUDENTS);
     // Read students directly from the global context
-    const { students, isLoading } = useStudents();
+    const { students, isLoading, error } = useStudents();
 
     if (isLoading) {
         return (
             <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
                 <ActivityIndicator size="large" color="#0D9488" />
+                <Text style={{ marginTop: 12, color: "#64748B" }}>Loading students...</Text>
+            </View>
+        );
+    }
+
+    if (error) {
+        return (
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 24 }}>
+                <Text style={{ fontSize: 18, fontWeight: "bold", color: "#EF4444" }}>Connection Error</Text>
+                <Text style={{ color: "#64748B", marginTop: 8, textAlign: "center" }}>{error}</Text>
             </View>
         );
     }
