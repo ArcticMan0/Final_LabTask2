@@ -6,7 +6,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { Student, STUDENTS } from "@/data/students";
 // Add useRef and useEffect to the import
 import React, { useRef, useEffect, useMemo, useState } from "react";
-import { Text, StyleSheet, View, FlatList, Pressable } from "react-native";
+import { Text, StyleSheet, View, FlatList, Pressable, ActivityIndicator } from "react-native";
 
 import { router } from "expo-router";
 import { useStudents } from "../../context/students-context";
@@ -37,7 +37,15 @@ export default function HomePage() {
     // Replaced by context
     // const [students, setStudents] = useState<Student[]>(STUDENTS);
     // Read students directly from the global context
-    const { students } = useStudents();
+    const { students, isLoading } = useStudents();
+
+    if (isLoading) {
+        return (
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                <ActivityIndicator size="large" color="#0D9488" />
+            </View>
+        );
+    }
 
     // No longer needed
     // const handleNewStudent = (newStudent: Student) => {
