@@ -3,8 +3,9 @@ import React from "react";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import FormField from "./form-field";
-import { Student } from "../data/students";
 import { router } from "expo-router";
+import { Alert } from "react-native";
+import { api } from "../services/api";
 import { useStudents } from "../context/students-context";
 
 // interface AddStudentFormProps {
@@ -111,42 +112,31 @@ export default function AddStudentForm() {
     // Derived value — not state, computed fresh every render
     const isFormValid = Object.keys(errors).length === 0 && formData.name.length > 0 && formData.studentId.length > 0;
 
-    // Submit effect
-    // This effect runs when the user presses the submit button.
-    // It simulates a network request and calls onSubmitSuccess with
-    // the new student data after a 1.5 second delay.
+    // Submit effect — POSTs to the server and dispatches the server's response
     useEffect(() => {
         if (!submitTrigger) return;
 
-        // Simulate a 1.5 second network request
-        const timeoutId = setTimeout(() => {
-            const newStudent: Student = {
-                id: Date.now().toString(),
-                name: formData.name.trim(),
-                studentId: formData.studentId.trim(),
-                department: formData.department.trim(),
-                bio: formData.bio.trim(),
-                skills: formData.skillsText
-                    .split(",")
-                    .map((s) => s.trim())
-                    .filter((s) => s.length > 0),
-                avatarUrl: "https://i.pravatar.cc/150?u=" + Date.now(),
-            };
-
-            setIsSubmitting(false);
-            setSubmitTrigger(false);
-            // onSubmitSuccess(newStudent);
-            dispatch({ type: "ADD_STUDENT", payload: newStudent });
-			router.back();
-        }, 1500);
-
-        // Cleanup: if the component unmounts (user navigates away)
-        // before the timeout fires, cancel it. Without this, the
-        // setTimeout callback would try to update state on an
-        // unmounted component — a common source of bugs and warnings.
-        return () => {
-            clearTimeout(timeoutId);
+        const newStudent = {
+            name: formData.name.trim(),
+            studentId: formData.studentId.trim(),
+            department: formData.department.trim(),
+            bio: formData.bio.trim(),
+            skills: formData.skillsText.split(",").map((s) => s.trim()).filter(Boolean),
+            avatarUrl: `https://i.pravatar.cc/150?u=${Date.now()}`,
         };
+
+        api.post("/students", newStudent)
+            .then(({ data }) => {
+                dispatch({ type: "ADD_STUDENT", payload: data });
+                router.back();
+            })
+            .catch(() => {
+                Alert.alert("Error", "Could not save student. Is the server running?");
+            })
+            .finally(() => {
+                setIsSubmitting(false);
+                setSubmitTrigger(false);
+            });
     }, [submitTrigger]);
 
     // Generic field updater — one function handles all 5 fields
