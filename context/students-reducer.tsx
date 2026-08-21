@@ -14,7 +14,8 @@ export type StudentsState = Student[];
 export type StudentsAction =
     | { type: "ADD_STUDENT"; payload: Student }
     | { type: "REMOVE_STUDENT"; payload: string } // payload = student id
-    | { type: "RESET" };
+    | { type: "RESET" }
+    | { type: "LOAD"; payload: Student[] };
 
 // ── Reducer function ─────────────────────────────────────
 // Takes current state + an action, returns the next state.
@@ -32,6 +33,9 @@ export function studentsReducer(state: StudentsState, action: StudentsAction): S
         case "RESET":
             // Replace the entire list with the original static data
             return STUDENTS;
+
+        case "LOAD":
+            return action.payload;
 
         default:
             // Unknown action — return state unchanged
