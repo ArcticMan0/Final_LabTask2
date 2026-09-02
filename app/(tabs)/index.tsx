@@ -29,6 +29,11 @@ export default function HomePage() {
   }, []); // [] — run once on mount only
 
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [retryKey, setRetryKey] = useState(0);
+
+  const handleRetry = useCallback(() => {
+    setRetryKey((k) => k + 1); // changing this key will re-mount the provider
+  }, []);
 
   // Replaced by router navigation
   // const [showForm, setShowForm] = useState(false);
@@ -40,33 +45,15 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
-        {/* Render 6 skeleton rows */}
-        {Array.from({ length: 6 }).map((_, index) => (
-          <SkeletonItem key={index} />
-        ))}
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#0D9488" />
+        <Text style={styles.loadingHint}>Loading students...</Text>
       </View>
     );
   }
 
   if (error) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          padding: 24,
-        }}
-      >
-        <Text style={{ fontSize: 18, fontWeight: "bold", color: "#EF4444" }}>
-          Connection Error
-        </Text>
-        <Text style={{ color: "#64748B", marginTop: 8, textAlign: "center" }}>
-          {error}
-        </Text>
-      </View>
-    );
+    return <ErrorScreen message={error} onRetry={handleRetry} />;
   }
 
   // No longer needed
@@ -172,4 +159,6 @@ const styles = StyleSheet.create({
   addButtonText: { color: "#FFFFFF", fontWeight: "700", fontSize: 13 },
   empty: { padding: 40, alignItems: "center" },
   emptyText: { fontSize: 14, color: "#94A3B8" },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  loadingHint: { marginTop: 12, color: "#64748B", fontSize: 13 },
 });
