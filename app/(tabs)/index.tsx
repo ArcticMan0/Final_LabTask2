@@ -3,9 +3,23 @@ import StudentDetail from "@/components/student-detail";
 import StudentItem from "@/components/student-item";
 import { Student } from "@/data/students";
 import { useDebounce } from "@/hooks/use-debounce";
+import ErrorScreen from "../../components/error-screen";
 // Add useRef and useEffect to the import
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import React, {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
+import {
+    ActivityIndicator,
+    FlatList,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
 
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -79,6 +93,25 @@ export default function HomePage() {
     setSelectedStudent((prev) => (prev?.id === student.id ? null : student));
   };
 
+  const EmptyList = useCallback(() => {
+    if (query.length > 0) {
+      return (
+        <View style={styles.empty}>
+          <Text style={styles.emptyTitle}>No results</Text>
+          <Text style={styles.emptySub}>
+            No students match "{debouncedQuery}"
+          </Text>
+        </View>
+      );
+    }
+    return (
+      <View style={styles.empty}>
+        <Text style={styles.emptyTitle}>No students yet</Text>
+        <Text style={styles.emptySub}>Tap + Add to add the first student</Text>
+      </View>
+    );
+  }, [query, debouncedQuery]);
+
   // Replaced by new route
   // if (showForm) {
   //     return <AddStudentForm onSubmitSuccess={handleNewStudent} onClose={() => setShowForm(false)} />;
@@ -121,11 +154,7 @@ export default function HomePage() {
             isSelected={selectedStudent?.id === item.id}
           />
         )}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyText}>No students match "{query}"</Text>
-          </View>
-        }
+        ListEmptyComponent={EmptyList}
       />
 
       {selectedStudent && (
@@ -157,8 +186,24 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   addButtonText: { color: "#FFFFFF", fontWeight: "700", fontSize: 13 },
-  empty: { padding: 40, alignItems: "center" },
+  empty: {
+    flex: 1,
+    alignItems: "center",
+    paddingTop: 80,
+    paddingHorizontal: 32,
+  },
   emptyText: { fontSize: 14, color: "#94A3B8" },
+  emptyTitle: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#334155",
+    marginBottom: 6,
+  },
+  emptySub: {
+    fontSize: 13,
+    color: "#94A3B8",
+    textAlign: "center",
+  },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   loadingHint: { marginTop: 12, color: "#64748B", fontSize: 13 },
 });
