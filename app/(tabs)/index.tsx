@@ -102,9 +102,16 @@ export default function HomePage() {
       <View style={styles.titleBar}>
         <Text style={styles.title}>Student Directory</Text>
         {/* Navigate to the AddStudent screen — no prop passing needed */}
+        {/* FIX: The +Add floating button was missing accessibilityRole and accessibilityLabel.
+             Screen reader users could not identify what the button does.
+             Added: accessibilityRole="button", accessibilityLabel="Add new student",
+             and accessibilityHint explaining it opens the form. */}
         <Pressable
           style={styles.addButton}
           onPress={() => router.push("/(tabs)/add-student")}
+          accessibilityRole="button"
+          accessibilityLabel="Add new student"
+          accessibilityHint="Opens the Add Student form"
         >
           <Text style={styles.addButtonText}>+ Add</Text>
         </Pressable>
