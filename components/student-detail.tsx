@@ -4,6 +4,7 @@ import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, View } from "
 import { Student } from "../data/students";
 import React from "react";
 import { useStudents } from "@/context/students-context";
+import { api } from "@/services/api";
 
 interface StudentDetailProps {
     student: Student;
@@ -16,32 +17,26 @@ export default function StudentDetail({ student, onRemoved }: StudentDetailProps
     const { dispatch } = useStudents();
 
     const handleRemove = () => {
-        console.log("Remove button pressed for student:", student.name);
-
         const message = `Remove ${student.name} from the directory?`;
 
-		// Alert is different on web vs Mobile
-		// This is the Web version of the confirmation dialog
-        if (Platform.OS === "web" && typeof window !== "undefined") {
-            const shouldRemove = window.confirm(message);
-            if (shouldRemove) {
+        const doRemove = async () => {
+            try {
+                await api.delete(`/students/${student.id}`);
                 dispatch({ type: "REMOVE_STUDENT", payload: student.id });
                 onRemoved();
+            } catch {
+                Alert.alert("Error", "Could not remove student. Is the server running?");
             }
+        };
+
+        if (Platform.OS === "web" && typeof window !== "undefined") {
+            if (window.confirm(message)) doRemove();
             return;
         }
 
-		// This is the Mobile version of the confirmation dialog
         Alert.alert("Remove Student", message, [
             { text: "Cancel", style: "cancel" },
-            {
-                text: "Remove",
-                style: "destructive",
-                onPress: () => {
-                    dispatch({ type: "REMOVE_STUDENT", payload: student.id });
-                    onRemoved();
-                },
-            },
+            { text: "Remove", style: "destructive", onPress: doRemove },
         ]);
     };
     return (

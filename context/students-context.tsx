@@ -1,50 +1,39 @@
 // context/students-context.tsx
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import React from "react";
 import { createContext, useContext, useEffect, useReducer, useState } from "react";
-import { STUDENTS } from "../data/students";
+import { api } from "../services/api";
 import { StudentsAction, StudentsState, studentsReducer } from "./students-reducer";
 
 interface StudentsContextValue {
     students: StudentsState;
     dispatch: React.Dispatch<StudentsAction>;
     isLoading: boolean;
+    error: string | null;
 }
 
 const StudentsContext = createContext<StudentsContextValue | null>(null);
 
-const STORAGE_KEY = "@student_directory";
-
 export function StudentsProvider({ children }: { children: React.ReactNode }) {
-    const [students, dispatch] = useReducer(studentsReducer, STUDENTS);
+    const [students, dispatch] = useReducer(studentsReducer, []);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    // ── LOAD: read saved data from disk on mount ──────────
+    // Load student list from the server on mount
     useEffect(() => {
-        AsyncStorage.getItem(STORAGE_KEY)
-            .then((raw) => {
-                if (raw) {
-                    const saved = JSON.parse(raw) as StudentsState;
-                    dispatch({ type: "LOAD", payload: saved });
-                }
+        api.get<StudentsState>("/students")
+            .then(({ data }) => {
+                dispatch({ type: "LOAD", payload: data });
             })
-            .catch((err) => console.error("AsyncStorage load error:", err))
+            .catch((err) => {
+                setError("Could not load students. Is the server running?");
+                console.error(err);
+            })
             .finally(() => setIsLoading(false));
-    }, []); // [] — run once on mount only
-
-    // ── SAVE: write to disk whenever students changes ─────
-    useEffect(() => {
-        // Skip saving during the initial load phase
-        if (isLoading) return;
-
-        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(students)).catch((err) =>
-            console.error("AsyncStorage save error:", err)
-        );
-    }, [students]); // re-run every time students changes
+    }, []);
 
     return (
-        <StudentsContext.Provider value={{ students, dispatch, isLoading }}>
+        <StudentsContext.Provider value={{ students, dispatch, isLoading, error }}>
             {children}
         </StudentsContext.Provider>
     );
